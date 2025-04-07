@@ -18,7 +18,7 @@ function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <Navigate to="/login" />;
   }
 
-  return children;
+  return <>{children}</>;
 }
 
 export default ProtectedRoute;

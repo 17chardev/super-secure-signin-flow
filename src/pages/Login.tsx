@@ -25,7 +25,7 @@ function Login() {
     }
   }, [user, navigate]);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
@@ -54,7 +54,7 @@ function Login() {
           });
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
         description: error.message || "An unexpected error occurred",
