@@ -14,8 +14,13 @@ import {
   Calendar,
   Award,
   LogOut,
-  User
+  User,
+  BarChart3,
+  Settings
 } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { Separator } from "@/components/ui/separator";
 
 const DashboardSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -27,13 +32,45 @@ const DashboardSidebar = () => {
   };
 
   const navItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: <Home size={20} /> },
-    { name: 'Data Siswa', path: '/dashboard/students', icon: <Users size={20} /> },
-    { name: 'Data Jurusan', path: '/dashboard/majors', icon: <BookOpen size={20} /> },
-    { name: 'Data Kelas', path: '/dashboard/classes', icon: <FileText size={20} /> },
-    { name: 'Data Angkatan', path: '/dashboard/batches', icon: <GraduationCap size={20} /> },
-    { name: 'Data Orangtua', path: '/dashboard/parents', icon: <User size={20} /> },
+    { 
+      name: 'Dashboard', 
+      path: '/dashboard', 
+      icon: <Home size={20} />,
+      description: 'Overview of the school management system'
+    },
+    { 
+      name: 'Data Siswa', 
+      path: '/dashboard/students', 
+      icon: <Users size={20} />,
+      description: 'Manage student information and records'
+    },
+    { 
+      name: 'Data Jurusan', 
+      path: '/dashboard/majors', 
+      icon: <BookOpen size={20} />,
+      description: 'Manage academic departments and majors'
+    },
+    { 
+      name: 'Data Kelas', 
+      path: '/dashboard/classes', 
+      icon: <FileText size={20} />,
+      description: 'Manage classes and class information'
+    },
+    { 
+      name: 'Data Angkatan', 
+      path: '/dashboard/batches', 
+      icon: <GraduationCap size={20} />,
+      description: 'Manage student batches and years'
+    },
+    { 
+      name: 'Data Orangtua', 
+      path: '/dashboard/parents', 
+      icon: <User size={20} />,
+      description: 'Manage parent information and contacts'
+    },
   ];
+
+  const userInitials = user?.email ? user.email.substring(0, 2).toUpperCase() : "US";
 
   return (
     <div 
@@ -56,31 +93,62 @@ const DashboardSidebar = () => {
       <div className="flex-1 overflow-y-auto py-4">
         <nav className="px-2 space-y-1">
           {navItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`
-                flex items-center py-2 px-4 rounded-md 
-                ${location.pathname === item.path 
-                  ? 'bg-blue-600 text-white' 
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'}
-                ${collapsed ? 'justify-center' : ''}
-              `}
-            >
-              <span className="mr-3">{item.icon}</span>
-              {!collapsed && <span>{item.name}</span>}
-            </Link>
+            <HoverCard key={item.path} openDelay={300} closeDelay={100}>
+              <HoverCardTrigger asChild>
+                <Link
+                  to={item.path}
+                  className={`
+                    flex items-center py-2 px-4 rounded-md group
+                    ${location.pathname === item.path 
+                      ? 'bg-blue-600 text-white' 
+                      : 'text-gray-300 hover:bg-gray-800 hover:text-white'}
+                    ${collapsed ? 'justify-center' : ''}
+                  `}
+                >
+                  <span className={`${collapsed ? '' : 'mr-3'} transition-all`}>{item.icon}</span>
+                  {!collapsed && <span>{item.name}</span>}
+                </Link>
+              </HoverCardTrigger>
+              {collapsed && (
+                <HoverCardContent side="right" className="bg-gray-800 text-white border-gray-700">
+                  <div className="flex flex-col space-y-1">
+                    <h4 className="font-semibold">{item.name}</h4>
+                    <p className="text-xs text-gray-400">{item.description}</p>
+                  </div>
+                </HoverCardContent>
+              )}
+            </HoverCard>
           ))}
         </nav>
       </div>
 
       <div className="p-4 border-t border-gray-700">
         <div className={`flex ${collapsed ? 'justify-center' : 'items-center justify-between'} mb-4`}>
-          {!collapsed && (
-            <div>
-              <p className="text-sm font-medium text-white truncate">{user?.email}</p>
-              <p className="text-xs text-gray-400">Administrator</p>
+          {!collapsed ? (
+            <div className="flex items-center gap-3">
+              <Avatar>
+                <AvatarFallback className="bg-blue-600">{userInitials}</AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="text-sm font-medium text-white truncate">{user?.email}</p>
+                <p className="text-xs text-gray-400">Administrator</p>
+              </div>
             </div>
+          ) : (
+            <HoverCard openDelay={300} closeDelay={100}>
+              <HoverCardTrigger asChild>
+                <Avatar className="cursor-pointer">
+                  <AvatarFallback className="bg-blue-600">{userInitials}</AvatarFallback>
+                </Avatar>
+              </HoverCardTrigger>
+              <HoverCardContent side="right" className="bg-gray-800 text-white border-gray-700">
+                <div className="flex flex-col space-y-1">
+                  <h4 className="font-semibold">Account</h4>
+                  <p className="text-xs text-gray-400">{user?.email}</p>
+                  <p className="text-xs text-gray-400">Administrator</p>
+                </div>
+              </HoverCardContent>
+            </HoverCard>
           )}
         </div>
         <Button 

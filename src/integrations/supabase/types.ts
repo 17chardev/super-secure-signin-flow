@@ -9,7 +9,190 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      batches: {
+        Row: {
+          created_at: string
+          id: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      classes: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      images: {
+        Row: {
+          created_at: string
+          id: string
+          public_id: string
+          signature: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          public_id: string
+          signature: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          public_id?: string
+          signature?: string
+          url?: string
+        }
+        Relationships: []
+      }
+      majors: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      parents: {
+        Row: {
+          address: string
+          created_at: string
+          father_name: string
+          id: string
+          mother_name: string
+          phone: string
+          student_id: string
+        }
+        Insert: {
+          address: string
+          created_at?: string
+          father_name: string
+          id?: string
+          mother_name: string
+          phone: string
+          student_id: string
+        }
+        Update: {
+          address?: string
+          created_at?: string
+          father_name?: string
+          id?: string
+          mother_name?: string
+          phone?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parents_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      students: {
+        Row: {
+          batch_id: string
+          birth_date: string
+          class_id: string
+          created_at: string
+          full_name: string
+          id: string
+          image_id: string | null
+          major_id: string
+          nisn: string
+          updated_at: string
+        }
+        Insert: {
+          batch_id: string
+          birth_date: string
+          class_id: string
+          created_at?: string
+          full_name: string
+          id?: string
+          image_id?: string | null
+          major_id: string
+          nisn: string
+          updated_at?: string
+        }
+        Update: {
+          batch_id?: string
+          birth_date?: string
+          class_id?: string
+          created_at?: string
+          full_name?: string
+          id?: string
+          image_id?: string | null
+          major_id?: string
+          nisn?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "students_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "students_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "students_image_id_fkey"
+            columns: ["image_id"]
+            isOneToOne: false
+            referencedRelation: "images"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "students_major_id_fkey"
+            columns: ["major_id"]
+            isOneToOne: false
+            referencedRelation: "majors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
