@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -47,8 +46,8 @@ import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchPaginated, PaginationOptions } from '@/utils/api';
 import { Tables } from '@/integrations/supabase/types';
+import { useDashboard } from '@/contexts/DashboardContext';
 
-// Define the form schema
 const formSchema = z.object({
   student_id: z.string().min(1, { message: "Student is required" }),
   father_name: z.string().min(1, { message: "Father's name is required" }),
@@ -59,10 +58,14 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 type Parent = Tables<"parents">;
-type Student = Tables<"students">;
+
+type StudentForDropdown = {
+  id: string;
+  full_name: string;
+  nisn?: string;
+};
 
 const ParentsManagement = () => {
-  // States
   const [loading, setLoading] = useState<boolean>(true);
   const [parents, setParents] = useState<any[]>([]);
   const [totalCount, setTotalCount] = useState<number>(0);
@@ -72,7 +75,7 @@ const ParentsManagement = () => {
   const [selectedParent, setSelectedParent] = useState<Parent | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
-  const [students, setStudents] = useState<Student[]>([]);
+  const [students, setStudents] = useState<StudentForDropdown[]>([]);
   const [pagination, setPagination] = useState<PaginationOptions>({
     page: 1,
     perPage: 10,
@@ -82,7 +85,8 @@ const ParentsManagement = () => {
     sortOrder: 'desc',
   });
 
-  // Initialize form
+  const { fetchStudents: fetchAllStudents } = useDashboard();
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -94,28 +98,26 @@ const ParentsManagement = () => {
     },
   });
 
-  // Fetch students for dropdown
   const fetchStudents = async () => {
     try {
-      const { data, error } = await supabase
-        .from('students')
-        .select('id, full_name, nisn')
-        .order('full_name');
-        
-      if (error) throw error;
-      setStudents(data || []);
+      const studentsData = await fetchAllStudents();
+      const formattedStudents: StudentForDropdown[] = studentsData.map(student => ({
+        id: student.id,
+        full_name: student.full_name,
+        nisn: student.nisn
+      }));
+      
+      setStudents(formattedStudents);
     } catch (error) {
       console.error('Error fetching students:', error);
       toast.error('Failed to load students data');
     }
   };
 
-  // Fetch parents with pagination and join relations
   const fetchParents = async () => {
     try {
       setLoading(true);
       
-      // Build the query with joins
       let query = supabase
         .from('parents')
         .select(`
@@ -123,26 +125,21 @@ const ParentsManagement = () => {
           students:student_id (id, full_name, nisn)
         `, { count: 'exact' });
       
-      // Apply search if provided
       if (pagination.searchTerm && pagination.searchFields && pagination.searchFields.length > 0) {
         const searchFilters = pagination.searchFields.map(field => `${field}.ilike.%${pagination.searchTerm}%`);
         query = query.or(searchFilters.join(","));
       }
       
-      // Apply sorting
       if (pagination.sortBy) {
         query = query.order(pagination.sortBy, { ascending: pagination.sortOrder === "asc" });
       } else {
-        // Default sort by created_at
         query = query.order("created_at", { ascending: false });
       }
       
-      // Apply pagination
       const from = (pagination.page - 1) * pagination.perPage;
       const to = from + pagination.perPage - 1;
       query = query.range(from, to);
       
-      // Execute query
       const { data, error, count } = await query;
       
       if (error) throw error;
@@ -157,7 +154,6 @@ const ParentsManagement = () => {
     }
   };
 
-  // Fetch on initial load and when pagination changes
   useEffect(() => {
     fetchStudents();
   }, []);
@@ -166,12 +162,11 @@ const ParentsManagement = () => {
     fetchParents();
   }, [pagination]);
 
-  // Handle search with debounce
   useEffect(() => {
     const timer = setTimeout(() => {
       setPagination(prev => ({
         ...prev,
-        page: 1, // Reset to first page when searching
+        page: 1,
         searchTerm,
       }));
     }, 500);
@@ -179,11 +174,9 @@ const ParentsManagement = () => {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  // Create or update parent
   const onSubmit = async (values: FormValues) => {
     try {
       if (isEditing && selectedParent) {
-        // Update existing parent
         const { error } = await supabase
           .from('parents')
           .update({
@@ -199,7 +192,6 @@ const ParentsManagement = () => {
         
         toast.success('Parent information updated successfully');
       } else {
-        // Create new parent
         const { error } = await supabase
           .from('parents')
           .insert([{
@@ -215,7 +207,6 @@ const ParentsManagement = () => {
         toast.success('Parent information created successfully');
       }
       
-      // Close dialog and refresh data
       setDialogOpen(false);
       form.reset();
       fetchParents();
@@ -224,7 +215,6 @@ const ParentsManagement = () => {
     }
   };
 
-  // Handle edit
   const handleEdit = (parent: Parent) => {
     setSelectedParent(parent);
     setIsEditing(true);
@@ -240,7 +230,6 @@ const ParentsManagement = () => {
     setDialogOpen(true);
   };
 
-  // Handle delete
   const handleDelete = async () => {
     if (!confirmDeleteId) return;
     
@@ -261,22 +250,18 @@ const ParentsManagement = () => {
     }
   };
 
-  // Open delete confirmation dialog
   const confirmDelete = (id: string) => {
     setConfirmDeleteId(id);
     setDeleteDialogOpen(true);
   };
 
-  // Handle page change
   const handlePageChange = (page: number) => {
     setPagination(prev => ({ ...prev, page }));
   };
 
-  // Format phone number for display
   const formatPhone = (phone: string) => {
     if (!phone) return '-';
     
-    // Basic formatting for Indonesian numbers
     if (phone.startsWith('0')) {
       return '+62 ' + phone.substring(1);
     } else if (phone.startsWith('62')) {
@@ -419,7 +404,6 @@ const ParentsManagement = () => {
         </main>
       </div>
       
-      {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
@@ -550,7 +534,6 @@ const ParentsManagement = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
