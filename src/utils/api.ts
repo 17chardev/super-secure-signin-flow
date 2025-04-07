@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Database } from "@/integrations/supabase/types";
 
 // Pagination and filtering types
 export type PaginationOptions = {
@@ -22,7 +23,7 @@ export type PaginatedResult<T> = {
 
 // Generic function for paginated fetches
 export async function fetchPaginated<T>(
-  table: string,
+  table: keyof Database["public"]["Tables"],
   options: PaginationOptions,
   additionalFilter?: (query: any) => any
 ): Promise<PaginatedResult<T>> {
